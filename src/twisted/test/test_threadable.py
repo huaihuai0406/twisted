@@ -16,7 +16,6 @@ except ImportError:
 else:
     threadingSkip = None
 
-from twisted.python.compat import _PY3
 from twisted.trial import unittest
 
 from twisted.python import threadable
@@ -42,14 +41,9 @@ class SynchronizationTests(unittest.SynchronousTestCase):
         more often, hopefully exercising more possible race conditions.  Also,
         delay actual test startup until the reactor has been started.
         """
-        if _PY3:
-            if getattr(sys, 'getswitchinterval', None) is not None:
-                self.addCleanup(sys.setswitchinterval, sys.getswitchinterval())
-                sys.setswitchinterval(0.0000001)
-        else:
-            if getattr(sys, 'getcheckinterval', None) is not None:
-                self.addCleanup(sys.setcheckinterval, sys.getcheckinterval())
-                sys.setcheckinterval(7)
+        if getattr(sys, 'getswitchinterval', None) is not None:
+            self.addCleanup(sys.setswitchinterval, sys.getswitchinterval())
+            sys.setswitchinterval(0.0000001)
 
 
     def test_synchronizedName(self):

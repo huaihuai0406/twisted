@@ -42,7 +42,7 @@ from twisted.internet.test.connectionmixins import ConnectableProtocol
 from twisted.internet.test.connectionmixins import ConnectionTestsMixin
 from twisted.internet.test.connectionmixins import StreamClientTestsMixin
 from twisted.internet.test.connectionmixins import runProtocolsWithReactor
-from twisted.python.compat import nativeString, _PY3, iteritems
+from twisted.python.compat import nativeString, iteritems
 from twisted.python.failure import Failure
 from twisted.python.log import addObserver, removeObserver, err
 from twisted.python.runtime import platform
@@ -672,10 +672,7 @@ class UNIXTestsBuilder(UNIXFamilyMixin, ReactorBuilder, ConnectionTestsMixin):
         runProtocolsWithReactor(self, server, client, self.endpoints)
 
         self.assertEqual(int, client.events[0])
-        if _PY3:
-            self.assertEqual(b"junk", bytes(client.events[1:]))
-        else:
-            self.assertEqual(b"junk", b"".join(client.events[1:]))
+        self.assertEqual(b"junk", bytes(client.events[1:]))
     if sendmsgSkip is not None:
         test_descriptorDeliveredBeforeBytes.skip = sendmsgSkip
 

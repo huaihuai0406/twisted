@@ -36,7 +36,7 @@ from twisted.protocols import loopback
 from twisted.python import failure
 from twisted.python import util, log
 from twisted.python.compat import (intToBytes, range, nativeString,
-                                   networkString, iterbytes, _PY3)
+                                   networkString, iterbytes)
 from twisted.trial import unittest
 
 from twisted.cred.portal import Portal, IRealm
@@ -1980,8 +1980,7 @@ class IMAP4HelperMixin:
         """
         failure.trap(imap4.IMAP4Exception)
         message = str(failure.value)
-        if _PY3:
-            expected = repr(expected)
+        expected = repr(expected)
 
         self.assertEqual(message, expected)
 

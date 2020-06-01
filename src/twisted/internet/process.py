@@ -26,7 +26,7 @@ from zope.interface import implementer
 
 from twisted.python import log, failure
 from twisted.python.util import switchUID
-from twisted.python.compat import items, range, _PY3
+from twisted.python.compat import items, range
 from twisted.internet import fdesc, abstract, error
 from twisted.internet.main import CONNECTION_LOST, CONNECTION_DONE
 from twisted.internet._baseprocess import BaseProcess
@@ -428,25 +428,23 @@ class _BaseProcess(BaseProcess, object):
                                "\n:").format(executable, str(args),
                                              id(environment))
 
-                        if _PY3:
+                        # On Python 3, print_exc takes a text stream, but
+                        # on Python 2 it still takes a byte stream.  So on
+                        # Python 3 we will wrap up the byte stream returned
+                        # by os.fdopen using TextIOWrapper.
 
-                            # On Python 3, print_exc takes a text stream, but
-                            # on Python 2 it still takes a byte stream.  So on
-                            # Python 3 we will wrap up the byte stream returned
-                            # by os.fdopen using TextIOWrapper.
+                        # We hard-code UTF-8 as the encoding here, rather
+                        # than looking at something like
+                        # getfilesystemencoding() or sys.stderr.encoding,
+                        # because we want an encoding that will be able to
+                        # encode the full range of code points.  We are
+                        # (most likely) talking to the parent process on
+                        # the other end of this pipe and not the filesystem
+                        # or the original sys.stderr, so there's no point
+                        # in trying to match the encoding of one of those
+                        # objects.
 
-                            # We hard-code UTF-8 as the encoding here, rather
-                            # than looking at something like
-                            # getfilesystemencoding() or sys.stderr.encoding,
-                            # because we want an encoding that will be able to
-                            # encode the full range of code points.  We are
-                            # (most likely) talking to the parent process on
-                            # the other end of this pipe and not the filesystem
-                            # or the original sys.stderr, so there's no point
-                            # in trying to match the encoding of one of those
-                            # objects.
-
-                            stderr = io.TextIOWrapper(stderr, encoding="utf-8")
+                        stderr = io.TextIOWrapper(stderr, encoding="utf-8")
 
                         stderr.write(msg)
                         traceback.print_exc(file=stderr)

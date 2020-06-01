@@ -13,7 +13,7 @@ import stat
 import time
 from pprint import pformat
 
-from twisted.python.compat import _PY3, long, unicode
+from twisted.python.compat import long
 from twisted.python.win32 import WindowsError, ERROR_DIRECTORY
 from twisted.python import filepath
 from twisted.python.runtime import platform
@@ -260,25 +260,20 @@ class FakeWindowsPath(filepath.FilePath):
         """
         @raise WindowsError: always.
         """
-        if _PY3:
-            # For Python 3.3 and higher, WindowsError is an alias for OSError.
-            # The first argument to the OSError constructor is errno, and the fourth
-            # argument is winerror.
-            # For further details, refer to:
-            # https://docs.python.org/3/library/exceptions.html#OSError
-            #
-            # On Windows, if winerror is set in the constructor,
-            # the errno value in the constructor is ignored, and OSError internally
-            # maps the winerror value to an errno value.
-            raise WindowsError(
-                None,
-                "A directory's validness was called into question",
-                self.path,
-                ERROR_DIRECTORY)
-        else:
-            raise WindowsError(
-                ERROR_DIRECTORY,
-                "A directory's validness was called into question")
+        # For Python 3.3 and higher, WindowsError is an alias for OSError.
+        # The first argument to the OSError constructor is errno,
+        # and the fourth argument is winerror.
+        # For further details, refer to:
+        # https://docs.python.org/3/library/exceptions.html#OSError
+        #
+        # On Windows, if winerror is set in the constructor,
+        # the errno value in the constructor is ignored, and OSError internally
+        # maps the winerror value to an errno value.
+        raise WindowsError(
+            None,
+            "A directory's validness was called into question",
+            self.path,
+            ERROR_DIRECTORY)
 
 
 
@@ -1727,7 +1722,7 @@ class UnicodeFilePathTests(TestCase):
         FilePath.
         """
         fp = filepath.FilePath(u'./mon\u20acy')
-        self.assertEqual(type(fp.path), unicode)
+        self.assertEqual(type(fp.path), str)
 
 
     def test_UnicodeInstantiationBytesChild(self):
@@ -1747,7 +1742,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u'./parent-mon\u20acy')
         child = fp.child(u'mon\u20acy')
-        self.assertEqual(type(child.path), unicode)
+        self.assertEqual(type(child.path), str)
 
 
     def test_UnicodeInstantiationUnicodePreauthChild(self):
@@ -1757,7 +1752,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u'./parent-mon\u20acy')
         child = fp.preauthChild(u'mon\u20acy')
-        self.assertEqual(type(child.path), unicode)
+        self.assertEqual(type(child.path), str)
 
 
     def test_UnicodeInstantiationBytesPreauthChild(self):
@@ -1796,7 +1791,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u'parent-mon\u20acy'.encode('utf-8'))
         child = fp.child(u"mon\u20acy")
-        self.assertEqual(type(child.path), unicode)
+        self.assertEqual(type(child.path), str)
 
 
     def test_BytesInstantiationBytesPreauthChild(self):
@@ -1816,7 +1811,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u'./parent-mon\u20acy'.encode('utf-8'))
         child = fp.preauthChild(u"mon\u20acy")
-        self.assertEqual(type(child.path), unicode)
+        self.assertEqual(type(child.path), str)
 
 
     def test_unicoderepr(self):
@@ -1825,10 +1820,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u"/mon\u20acy")
         reprOutput = repr(fp)
-        if _PY3:
-            self.assertEqual("FilePath('/mon\u20acy')", reprOutput)
-        else:
-            self.assertEqual("FilePath(u'/mon\\u20acy')", reprOutput)
+        self.assertEqual("FilePath('/mon\u20acy')", reprOutput)
 
 
     def test_bytesrepr(self):
@@ -1837,12 +1829,8 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u'/parent-mon\u20acy'.encode('utf-8'))
         reprOutput = repr(fp)
-        if _PY3:
-            self.assertEqual(
-                "FilePath(b'/parent-mon\\xe2\\x82\\xacy')", reprOutput)
-        else:
-            self.assertEqual(
-                "FilePath('/parent-mon\\xe2\\x82\\xacy')", reprOutput)
+        self.assertEqual(
+            "FilePath(b'/parent-mon\\xe2\\x82\\xacy')", reprOutput)
 
 
     def test_unicodereprWindows(self):
@@ -1851,10 +1839,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u"C:\\")
         reprOutput = repr(fp)
-        if _PY3:
-            self.assertEqual("FilePath('C:\\\\')", reprOutput)
-        else:
-            self.assertEqual("FilePath(u'C:\\\\')", reprOutput)
+        self.assertEqual("FilePath('C:\\\\')", reprOutput)
 
 
     def test_bytesreprWindows(self):
@@ -1863,10 +1848,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(b"C:\\")
         reprOutput = repr(fp)
-        if _PY3:
-            self.assertEqual("FilePath(b'C:\\\\')", reprOutput)
-        else:
-            self.assertEqual("FilePath('C:\\\\')", reprOutput)
+        self.assertEqual("FilePath(b'C:\\\\')", reprOutput)
 
 
     if platform.isWindows():
@@ -1892,7 +1874,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u"/")
         children = fp.globChildren(u"*")
-        self.assertIsInstance(children[0].path, unicode)
+        self.assertIsInstance(children[0].path, str)
 
 
     def test_unicodeBasename(self):
@@ -1900,7 +1882,7 @@ class UnicodeFilePathTests(TestCase):
         Calling C{basename} on an text- L{FilePath} returns L{unicode}.
         """
         fp = filepath.FilePath(u"./")
-        self.assertIsInstance(fp.basename(), unicode)
+        self.assertIsInstance(fp.basename(), str)
 
 
     def test_unicodeDirname(self):
@@ -1908,7 +1890,7 @@ class UnicodeFilePathTests(TestCase):
         Calling C{dirname} on a text-mode L{FilePath} returns L{unicode}.
         """
         fp = filepath.FilePath(u"./")
-        self.assertIsInstance(fp.dirname(), unicode)
+        self.assertIsInstance(fp.dirname(), str)
 
 
     def test_unicodeParent(self):
@@ -1918,7 +1900,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u"./")
         parent = fp.parent()
-        self.assertIsInstance(parent.path, unicode)
+        self.assertIsInstance(parent.path, str)
 
 
     def test_mixedTypeTemporarySibling(self):
@@ -1938,7 +1920,7 @@ class UnicodeFilePathTests(TestCase):
         """
         fp = filepath.FilePath(u"/tmp/mon\u20acy")
         tempSibling = fp.temporarySibling(u".txt")
-        self.assertIsInstance(tempSibling.path, unicode)
+        self.assertIsInstance(tempSibling.path, str)
 
 
     def test_mixedTypeSiblingExtensionSearch(self):
@@ -1967,7 +1949,7 @@ class UnicodeFilePathTests(TestCase):
         newPath = fp.siblingExtensionSearch(u".txt")
 
         self.assertIsInstance(newPath, filepath.FilePath)
-        self.assertIsInstance(newPath.path, unicode)
+        self.assertIsInstance(newPath.path, str)
 
 
     def test_mixedTypeSiblingExtension(self):
@@ -1997,7 +1979,7 @@ class UnicodeFilePathTests(TestCase):
         newPath = fp.siblingExtension(u".txt")
 
         self.assertIsInstance(newPath, filepath.FilePath)
-        self.assertIsInstance(newPath.path, unicode)
+        self.assertIsInstance(newPath.path, str)
 
 
     def test_mixedTypeChildSearchPreauth(self):
@@ -2031,7 +2013,7 @@ class UnicodeFilePathTests(TestCase):
         newPath = fp.childSearchPreauth(u"text.txt")
 
         self.assertIsInstance(newPath, filepath.FilePath)
-        self.assertIsInstance(newPath.path, unicode)
+        self.assertIsInstance(newPath.path, str)
 
 
     def test_asBytesModeFromUnicode(self):
@@ -2053,7 +2035,7 @@ class UnicodeFilePathTests(TestCase):
         fp = filepath.FilePath(b"./tmp")
         newfp = fp.asTextMode()
         self.assertIsNot(fp, newfp)
-        self.assertIsInstance(newfp.path, unicode)
+        self.assertIsInstance(newfp.path, str)
 
 
     def test_asBytesModeFromBytes(self):
@@ -2075,7 +2057,7 @@ class UnicodeFilePathTests(TestCase):
         fp = filepath.FilePath(u"./tmp")
         newfp = fp.asTextMode()
         self.assertIs(fp, newfp)
-        self.assertIsInstance(newfp.path, unicode)
+        self.assertIsInstance(newfp.path, str)
 
 
     def test_asBytesModeFromUnicodeWithEncoding(self):

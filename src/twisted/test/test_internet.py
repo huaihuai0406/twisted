@@ -11,11 +11,12 @@ import sys
 import time
 from unittest import skipIf
 
-from twisted.python.compat import _PY3
-from twisted.trial import unittest
 from twisted.internet import reactor, protocol, error, abstract, defer
 from twisted.internet import interfaces, base
+from twisted.internet.defer import Deferred, passthru
 from twisted.internet.tcp import Connector
+from twisted.python import util
+from twisted.trial import unittest
 
 try:
     from twisted.internet import ssl
@@ -24,9 +25,6 @@ except ImportError:
 if ssl and not ssl.supported:
     ssl = None
 
-from twisted.internet.defer import Deferred, passthru
-if not _PY3:
-    from twisted.python import util
 
 
 class ThreePhaseEventTests(unittest.TestCase):
@@ -1044,17 +1042,16 @@ class ResolveTests(unittest.TestCase):
             # If the output is "done 127.0.0.1\n" we don't really care what
             # else happened.
             output = b''.join(output)
-            if _PY3:
-                expected_output = (b'done 127.0.0.1' +
-                                   os.linesep.encode("ascii"))
-            else:
-                expected_output = b'done 127.0.0.1\n'
+            expected_output = (b'done 127.0.0.1' +
+                               os.linesep.encode("ascii"))
             if output != expected_output:
                 self.fail((
-                    "The child process failed to produce the desired results:\n"
-                    "   Reason for termination was: %r\n"
-                    "   Output stream was: %r\n"
-                    "   Error stream was: %r\n") % (reason.getErrorMessage(), output, b''.join(error)))
+                    "The child process failed to produce the "
+                    "desired results:\n"
+                    "   Reason for termination was: {!r}\n"
+                    "   Output stream was: {!r}\n"
+                    "   Error stream was: {!r}\n").format(
+                 reason.getErrorMessage(), output, b''.join(error)))
 
         helperDeferred.addCallback(cbFinished)
         return helperDeferred
@@ -1388,9 +1385,6 @@ class PortStringificationTests(unittest.TestCase):
             self.assertNotEqual(str(p).find(str(portNo)), -1,
                                 "%d not found in %s" % (portNo, p))
             return p.stopListening()
-
-        if _PY3:
-            testSSL.skip = ("Re-enable once the Python 3 SSL port is done.")
 
 
 

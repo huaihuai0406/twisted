@@ -12,11 +12,12 @@ import traceback
 import pdb
 import linecache
 
-from twisted.python.compat import _PY3, NativeStringIO
+from io import StringIO
+
 from twisted.python import reflect
 from twisted.python import failure
 
-from twisted.trial.unittest import SkipTest, SynchronousTestCase
+from twisted.trial.unittest import SynchronousTestCase
 
 
 try:
@@ -64,14 +65,6 @@ class FailureTests(SynchronousTestCase):
         expected types, L{failure.Failure.trap} raises the wrapped
         C{Exception}.
         """
-        if not _PY3:
-            raise SkipTest(
-                """
-                Only expected behaviour on Python 3.
-                @see U{http://twisted.readthedocs.io/en/latest/core/howto/python3.html#twisted-python-failure}
-                """
-            )
-
         exception = ValueError()
         try:
             raise exception
@@ -80,29 +73,6 @@ class FailureTests(SynchronousTestCase):
 
         untrapped = self.assertRaises(ValueError, f.trap, OverflowError)
         self.assertIs(exception, untrapped)
-
-
-    def test_trapRaisesSelf(self):
-        """
-        If the wrapped C{Exception} is not a subclass of one of the
-        expected types, L{failure.Failure.trap} raises itself.
-        """
-        if _PY3:
-            raise SkipTest(
-                """
-                Only expected behaviour on Python 2.
-                @see U{http://twisted.readthedocs.io/en/latest/core/howto/python3.html#twisted-python-failure}
-                """
-            )
-
-        exception = ValueError()
-        try:
-            raise exception
-        except:
-            f = failure.Failure()
-
-        untrapped = self.assertRaises(failure.Failure, f.trap, OverflowError)
-        self.assertIs(f, untrapped)
 
 
     def test_failureValueFromFailure(self):
@@ -225,7 +195,7 @@ class FailureTests(SynchronousTestCase):
             exampleLocalVar
 
         f = getDivisionFailure(captureVars=captureVars)
-        out = NativeStringIO()
+        out = StringIO()
         if cleanFailure:
             f.cleanFailure()
         f.printDetailedTraceback(out)
@@ -283,7 +253,7 @@ class FailureTests(SynchronousTestCase):
             exampleLocalVar
 
         f = getDivisionFailure()
-        out = NativeStringIO()
+        out = StringIO()
         f.printBriefTraceback(out)
         tb = out.getvalue()
         stack = ''
@@ -329,7 +299,7 @@ class FailureTests(SynchronousTestCase):
             exampleLocalVar
 
         f = getDivisionFailure(captureVars=captureVars)
-        out = NativeStringIO()
+        out = StringIO()
         f.printTraceback(out)
         tb = out.getvalue()
         stack = ''

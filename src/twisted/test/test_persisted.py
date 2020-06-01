@@ -4,32 +4,15 @@
 
 
 # System Imports
-import sys
-
-from twisted.trial import unittest
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
+import copyreg
 import io
-
-try:
-    from cStringIO import StringIO as _oldStyleCStringIO
-except ImportError:
-    skipStringIO = "No cStringIO available."
-else:
-    skipStringIO = None
-
-try:
-    import copyreg
-except:
-    import copy_reg as copyreg
+import pickle
+import sys
 
 # Twisted Imports
 from twisted.persisted import styles, aot, crefutil
-from twisted.python.compat import _PY3
+from twisted.trial import unittest
+
 
 
 class VersionTests(unittest.TestCase):
@@ -47,8 +30,10 @@ class VersionTests(unittest.TestCase):
         styles.doUpgrade()
         assert mnv.ok, "initial upgrade not run!"
 
+
     def test_versionUpgrade(self):
         global MyVersioned
+
         class MyVersioned(styles.Versioned):
             persistenceVersion = 2
             persistenceForgets = ['garbagedata']
@@ -77,16 +62,19 @@ class VersionTests(unittest.TestCase):
         styles.doUpgrade()
         assert obj.v3 == 1, "upgraded unnecessarily"
         assert obj.v4 == 1, "upgraded unnecessarily"
-    
+
+
     def test_nonIdentityHash(self):
         global ClassWithCustomHash
+
         class ClassWithCustomHash(styles.Versioned):
             def __init__(self, unique, hash):
                 self.unique = unique
                 self.hash = hash
+
             def __hash__(self):
                 return self.hash
-        
+
         v1 = ClassWithCustomHash('v1', 0)
         v2 = ClassWithCustomHash('v2', 0)
 
@@ -100,24 +88,34 @@ class VersionTests(unittest.TestCase):
         self.assertEqual(v2.unique, 'v2')
         self.assertTrue(v1.upgraded)
         self.assertTrue(v2.upgraded)
-    
+
+
     def test_upgradeDeserializesObjectsRequiringUpgrade(self):
         global ToyClassA, ToyClassB
+
         class ToyClassA(styles.Versioned):
             pass
+
         class ToyClassB(styles.Versioned):
             pass
+
         x = ToyClassA()
         y = ToyClassB()
         pklA, pklB = pickle.dumps(x), pickle.dumps(y)
         del x, y
         ToyClassA.persistenceVersion = 1
+
         def upgradeToVersion1(self):
             self.y = pickle.loads(pklB)
             styles.doUpgrade()
+
         ToyClassA.upgradeToVersion1 = upgradeToVersion1
         ToyClassB.persistenceVersion = 1
-        ToyClassB.upgradeToVersion1 = lambda self: setattr(self, 'upgraded', True)
+
+        def setUpgraded(self):
+            setattr(self, 'upgraded', True)
+
+        ToyClassB.upgradeToVersion1 = setUpgraded
 
         x = pickle.loads(pklA)
         styles.doUpgrade()
@@ -198,10 +196,10 @@ class EphemeralTests(unittest.TestCase):
         o = MyEphemeral(3)
         self.assertEqual(o.__class__, MyEphemeral)
         self.assertEqual(o.x, 3)
-        
+
         pickl = pickle.dumps(o)
         o = pickle.loads(pickl)
-        
+
         self.assertEqual(o.__class__, styles.Ephemeral)
         self.assertFalse(hasattr(o, 'x'))
 
@@ -210,7 +208,7 @@ class Pickleable:
 
     def __init__(self, x):
         self.x = x
-    
+
     def getX(self):
         return self.x
 
@@ -279,12 +277,16 @@ class B:
     def bmethod(self):
         pass
 
+
+
 def funktion():
     pass
 
+
+
 class PicklingTests(unittest.TestCase):
     """Test pickling of extra object types."""
-    
+
     def test_module(self):
         pickl = pickle.dumps(styles)
         o = pickle.loads(pickl)
@@ -313,17 +315,6 @@ class PicklingTests(unittest.TestCase):
         o = pickle.loads(pickl)
         self.assertEqual(o(), 4)
         self.assertEqual(type(o), type(obj.getX))
-    
-    def test_stringIO(self):
-        f = _oldStyleCStringIO()
-        f.write("abc")
-        pickl = pickle.dumps(f)
-        o = pickle.loads(pickl)
-        self.assertEqual(type(o), type(f))
-        self.assertEqual(f.getvalue(), "abc")
-
-    if skipStringIO:
-        test_stringIO.skip = skipStringIO
 
 
 
@@ -332,10 +323,6 @@ class StringIOTransitionTests(unittest.TestCase):
     When pickling a cStringIO in Python 2, it should unpickle as a BytesIO or a
     StringIO in Python 3, depending on the type of its contents.
     """
-
-    if not _PY3:
-        skip = "In Python 2 we can still unpickle cStringIO as such."
-
 
     def test_unpickleBytesIO(self):
         """
@@ -358,11 +345,17 @@ class EvilSourceror:
         self.a.b = self
         self.a.b.c = x
 
+
+
 class NonDictState:
     def __getstate__(self):
         return self.state
+
+
     def __setstate__(self, state):
         self.state = state
+
+
 
 class AOTTests(unittest.TestCase):
     def test_simpleTypes(self):

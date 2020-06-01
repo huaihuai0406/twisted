@@ -45,7 +45,7 @@ from twisted.python.log import msg
 from twisted.internet import reactor, protocol, error, interfaces, defer
 from twisted.trial import unittest
 from twisted.python import runtime, procutils
-from twisted.python.compat import _PY3, networkString, range, bytesEnviron
+from twisted.python.compat import networkString, bytesEnviron
 from twisted.python.filepath import FilePath
 
 
@@ -2718,15 +2718,13 @@ class ClosingPipesTests(unittest.TestCase):
         ProcessProtocol.transport.closeStdout actually closes the pipe.
         """
         d = self.doit(1)
+
         def _check(errput):
-            if _PY3:
-                if runtime.platform.isWindows():
-                    self.assertIn(b"OSError", errput)
-                    self.assertIn(b"22", errput)
-                else:
-                    self.assertIn(b'BrokenPipeError', errput)
+            if runtime.platform.isWindows():
+                self.assertIn(b"OSError", errput)
+                self.assertIn(b"22", errput)
             else:
-                self.assertIn(b'OSError', errput)
+                self.assertIn(b'BrokenPipeError', errput)
             if runtime.platform.getType() != 'win32':
                 self.assertIn(b'Broken pipe', errput)
         d.addCallback(_check)

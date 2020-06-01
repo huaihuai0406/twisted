@@ -7,7 +7,6 @@ import types
 
 from twisted.trial import unittest
 from twisted.python import rebuild
-from twisted.python.compat import _PY3
 
 from . import crash_test_dummy
 f = crash_test_dummy.foo
@@ -176,11 +175,9 @@ class RebuildTests(unittest.TestCase):
 
         # Test rebuilding a builtin class
         newException = rebuild.latestClass(Exception)
-        if _PY3:
-            self.assertEqual(repr(Exception), repr(newException))
-        else:
-            self.assertIn('twisted.python.rebuild.Exception', repr(newException))
-        self.assertEqual(newException, testSensitive.latestVersionOf(newException))
+        self.assertEqual(repr(Exception), repr(newException))
+        self.assertEqual(newException,
+                         testSensitive.latestVersionOf(newException))
 
         # Test types.MethodType on method in class
         self.assertEqual(TestSensitive.test_method,

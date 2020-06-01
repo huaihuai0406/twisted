@@ -12,7 +12,6 @@ import stat
 import sys
 import warnings
 
-from twisted.python.compat import _PY3
 from twisted.python.runtime import platform
 from twisted.trial import unittest
 from twisted.internet import error, reactor, utils, interfaces
@@ -125,11 +124,7 @@ class ProcessUtilsTests(unittest.TestCase):
         def gotOutputAndValue(out_err_code):
             out, err, code = out_err_code
             self.assertEqual(out, b"hello world!\n")
-            if _PY3:
-                self.assertEqual(err, b"goodbye world!\n")
-            else:
-                self.assertEqual(err, b"goodbye world!" +
-                                      os.linesep)
+            self.assertEqual(err, b"goodbye world!\n")
             self.assertEqual(code, 1)
         d = utils.getProcessOutputAndValue(self.exe, ["-u", scriptFile])
         return d.addCallback(gotOutputAndValue)
